@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+            background-color: #4158D0;
+            background-image: linear-gradient(43deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
+        }
+
+        .wrapper {
+            width: 800px;
+            height: 800px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #4158D0;
+            box-sizing: border-box;
+        }
+
+        .die::before {
+            content: "DIE";
+        }
+
+        .endLevel::before {
+            content: "Congratulations";
+        }
+
+        .pause::before {
+            content: "Pause";
+        }
+
+        .overlay::before {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.3);
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 48px;
+            font-weight: bold;
+            animation: anim 0.5s ease both;
+            text-shadow: 5px 5px 5px black;
+        }
+
+        table {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+            box-sizing: border-box;
+        }
+
+        td {
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+        }
+
+        .settings {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: anim 0.5s ease both;
+            z-index: 30;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-image: linear-gradient(to right, #8360c3, #2ebf91);
+            padding: 30px;
+        }
+
+        .settings div {
+            width: min-content;
+            margin-bottom: 20px;
+        }
+
+        .settings input {
+            border: none;
+            outline: none;
+            padding: 10px;
+            border-radius: 10px;
+            width: 200px;
+        }
+
+        .settings fieldset {
+            border-radius: 10px;
+        }
+
+        .show {
+            display: flex;
+        }
+
+        @keyframes anim {
+            from {
+                transform: translateY(200%);
+            }
+
+            to {
+                transform: translateY(0%);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <span class="count"></span>
+        <span>/</span>
+        <span class="total"></span>
+    </div>
+    <div class="wrapper"></div>
+    <span>Space - pause, Escape - menu, &#8592; &#8595; &#8593; &#8594;</span>
+    <div class="settings show">
+        <div>
+            <label>
+                <fieldset>
+                    <legend>
+                        Snake head img URL
+                    </legend>
+                    <input type="text"
+                        value="https://png.pngitem.com/pimgs/s/134-1344027_cat-head-png-free-cat-head-transparent-images.png"
+                        id="img">
+                </fieldset>
+            </label>
+        </div>
+        <div>
+            <label>
+                <fieldset>
+                    <legend>
+                        Area Size
+                    </legend>
+                    <input type="number" value="20" min="10" max="40" id="size">
+                </fieldset>
+            </label>
+        </div>
+        <div>
+            <label>
+                <fieldset>
+                    <legend>
+                        Total items to snake Eat
+                    </legend>
+                    <input type="number" value="20" min="1" id="total">
+                </fieldset>
+            </label>
+        </div>
+    </div>
+    <script>
+        let prevDir = "";
+        let dir = "";
+        document.body.addEventListener("keydown", (e) => {
+            switch (e.code) {
+                case "ArrowRight":
+                    if (prevDir !== "ArrowLeft") {
+                        dir = e.code;
+                    }
+                    break;
+                case "ArrowLeft":
+                    if (prevDir !== "ArrowRight") {
+                        dir = e.code;
+                    }
+                    break;
+                case "ArrowUp":
+                    if (prevDir !== "ArrowDown") {
+                        dir = e.code;
+                    }
+                    break;
+                case "ArrowDown":
+                    if (prevDir !== "ArrowUp") {
+                        dir = e.code;
+                    }
+                    break;
+                case "Space":
+                    dir = dir === e.code ? prevDir : e.code;
+                    break;
+                case "Escape":
+                    if (dir) {
+                        dir = "Space"
+                    }
+                    document.querySelector(".settings").classList.toggle("show");
+                    break;
+                default:
+                    break;
+            }
+            if (prevDir !== dir && dir !== "Space") {
+                prevDir = dir;
+            }
+        });
+
+        const init = (config) => {
+            const wrapper = document.querySelector(".wrapper");
+            wrapper.innerHTML = "<canvas></canvas>";
+            const canvas = document.querySelector("canvas");
+            const { width, height } = wrapper.getBoundingClientRect();
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "rgba(0,0,0,0.1)";
+            ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, height, width, 1);
+            ctx.fillRect(0, 0, 1, height);
+            const tdSize = Math.floor(width / config.items[0].length);
+            paintMap(ctx, wrapper, config, tdSize);
+            const interval = setInterval(() => {
+                if (dir) {
+                    /** pause */
+                    if (dir === "Space") {
+                        wrapper.classList.add("overlay", "pause");
+                        return;
+                    }
+                    wrapper.classList.remove("overlay", "pause");
+                    const status = moveSnake(config, dir);
+                    switch (status) {
+                        case "crash":
+                            wrapper.classList.add("overlay", "die");
+                            clearInterval(interval);
+                            break;
+                        case "endLevel":
+                            ctx.clearRect(0, 0, width, height);
+                            paintMap(ctx, wrapper, config, tdSize);
+                            wrapper.classList.add("overlay", "endLevel");
+                            clearInterval(interval);
+                            break;
+                        default:
+                            ctx.clearRect(0, 0, width, height);
+                            paintMap(ctx, wrapper, config, tdSize);
+                            break;
+                    }
+                }
+            }, 1000 / config.speed);
+        };
+
+        const moveSnake = (config, direction) => {
+            const items = config.items;
+            const { tailX, tailY, headX, headY } = getSnakePosition(items);
+            const clearTail = () => {
+                items[tailY][tailX] = 0;
+            };
+            const moveHead = (y, x) => {
+                items[y][x] = items[headY][headX] + 1;
+            };
+            const move = {
+                ArrowRight: () => {
+                    const [y, x] = [headY, headX + 1];
+                    const nextState = items[y]?.[x];
+                    const action = getAction(nextState);
+                    const actions = {
+                        move: () => {
+                            moveHead(y, x);
+                            clearTail();
+                        },
+                        eat: () => {
+                            moveHead(y, x);
+                            config.generateEatItem();
+                        },
+                        crash: () => { }
+                    };
+                    actions[action]();
+                    return action;
+                },
+                ArrowUp: () => {
+                    const [y, x] = [headY - 1, headX];
+                    const nextState = items[y]?.[x];
+                    const action = getAction(nextState);
+                    const actions = {
+                        move: () => {
+                            moveHead(y, x);
+                            clearTail();
+                        },
+                        eat: () => {
+                            moveHead(y, x);
+                            config.generateEatItem();
+                        },
+                        crash: () => { }
+                    };
+                    actions[action]();
+                    return action;
+                },
+                ArrowLeft: () => {
+                    const [y, x] = [headY, headX - 1];
+                    const nextState = items[y]?.[x];
+                    const action = getAction(nextState);
+                    const actions = {
+                        move: () => {
+                            moveHead(y, x);
+                            clearTail();
+                        },
+                        eat: () => {
+                            moveHead(y, x);
+                            config.generateEatItem();
+                        },
+                        crash: () => { }
+                    };
+                    actions[action]();
+                    return action;
+                },
+                ArrowDown: () => {
+                    const [y, x] = [headY + 1, headX];
+                    const nextState = items[y]?.[x];
+                    const action = getAction(nextState);
+                    const actions = {
+                        move: () => {
+                            moveHead(y, x);
+                            clearTail();
+                        },
+                        eat: () => {
+                            moveHead(y, x);
+                            config.generateEatItem();
+                        },
+                        crash: () => { },
+                    };
+                    actions[action]();
+                    return action;
+                }
+            };
+            const status = move[direction]();
+            const isHasToEat = items.some((arr) => arr.some((value) => value === 1));
+            return isHasToEat ? status : "endLevel";
+        };
+
+        const getSnakePosition = (values) => {
+            let tailX, tailY, headX, headY;
+            values.reduce(
+                (acc, items, y) => {
+                    let [min, max] = acc;
+                    items.forEach((num, x) => {
+                        if (num < 2) return;
+                        if (num < min) {
+                            min = num;
+                            tailX = x;
+                            tailY = y;
+                        }
+                        if (num > max) {
+                            max = num;
+                            headX = x;
+                            headY = y;
+                        }
+                    });
+                    return [min, max];
+                },
+                [10000, 0]
+            );
+            return { tailX, tailY, headX, headY };
+        };
+
+        const getAction = (next) => {
+            switch (next) {
+                case 0:
+                    return "move";
+                case 1:
+                    return "eat";
+                default:
+                    return "crash";
+            }
+        };
+
+        const paintMap = (ctx, wrapper, lvlItem, tdSize, img) => {
+            if (wrapper.lastElementChild.tagName !== "CANVAS") {
+                wrapper.lastElementChild.remove();
+            }
+            const table = document.createElement("table");
+            table.setAttribute("cellspacing", 0);
+            table.setAttribute("cellpadding", 0);
+            wrapper.appendChild(table);
+            // init map
+            const items = lvlItem.items;
+            let headEl,
+                max = 0,
+                tailEl,
+                min = 10000;
+            const getPosition = (el) => {
+                let height, width, left, top;
+                height = Math.round(el.clientHeight);
+                width = Math.round(el.clientWidth);
+                left = Math.round(el.offsetLeft);
+                top = Math.round(el.offsetTop);
+                return { height, width, left, top };
+            };
+            items.forEach((array) => {
+                const tr = table.appendChild(document.createElement("tr"));
+                array.forEach((item) => {
+                    const td = document.createElement("td");
+                    td.style.width = tdSize + "px";
+                    td.style.height = tdSize + "px";
+                    td.style.background = "#3D9970";
+                    tr.appendChild(td);
+                    const position = getPosition(td);
+                    // snake item
+                    if (item === 1) {
+                        ctx.beginPath();
+                        ctx.fillStyle = "#85144b";
+                        ctx.fillRect(position.left, position.top, position.width, position.height);
+                        ctx.strokeStyle = "white";
+                        ctx.strokeRect(position.left, position.top, position.width, position.height);
+                        ctx.closePath();
+                    }
+                    // snake
+                    if (item > 1) {
+                        ctx.beginPath();
+                        ctx.fillStyle = "#252f50";
+                        ctx.fillRect(position.left, position.top, position.width, position.height);
+                        ctx.strokeStyle = "white";
+                        ctx.strokeRect(position.left, position.top, position.width, position.height);
+                        ctx.closePath();
+                    }
+                    if (item > max) {
+                        max = item;
+                        headEl = td;
+                    }
+                    if (min > item && item > 1) {
+                        min = item;
+                        tailEl = td;
+                    }
+                });
+            });
+            ctx.beginPath();
+            if (img) {
+                img.width = headPos.width
+                img.height = headPos.height
+                ctx.drawImage(img, headPos.left, headPos.top, headPos.width, headPos.height);
+            } else {
+                ctx.fillStyle = "orange";
+                const headPos = getPosition(headEl);
+                ctx.fillRect(
+                    headPos.left,
+                    headPos.top,
+                    headPos.width,
+                    headPos.height
+                );
+            }
+            ctx.fillStyle = "rgba(0,0,0,0.4)";
+            const tailPos = getPosition(tailEl);
+            ctx.fillRect(
+                tailPos.left,
+                tailPos.top,
+                tailPos.width,
+                tailPos.height
+            );
+            ctx.closePath();
+        };
+
+        const getLevel = (i) => {
+            /**
+             * 1 = snake item
+             * >= 2 snake
+             */
+            const generateLevel = (size = 10) => {
+                const items = [];
+                let i = size + 1;
+                while (i) {
+                    const arr = [];
+                    arr.length = size + 1;
+                    arr.fill(0);
+                    items.push(arr);
+                    i--;
+                }
+                items[0][0] = 2;
+                items[0][1] = 3;
+                return items;
+            };
+            const countEl = document.querySelector(".count");
+            const generateEatItem = () => {
+                if (levels[i].count >= levels[i].total) {
+                    return;
+                }
+                const random = () => Math.round(Math.random() * levels[i].items[0].length);
+                let end = false;
+                while (!end) {
+                    const y = random();
+                    const x = random();
+                    if (levels[i].items[y]?.[x] === 0) {
+                        levels[i].items[y][x] = 1;
+                        end = true;
+                    }
+                }
+                countEl.innerText = levels[i].count;
+                levels[i].count++;
+            };
+            const levels = {
+                1: {
+                    items: generateLevel(15),
+                    speed: 6,
+                    count: 0,
+                    total: 112,
+                    generateEatItem,
+                }
+            };
+            generateEatItem();
+            document.querySelector(".total").innerText = levels[i].total;
+            return levels[i];
+        }
+        init(getLevel(1));
+    </script>
+
+</body>
+
+</html>
