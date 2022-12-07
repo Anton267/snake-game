@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake</title>
+    <link rel="stylesheet" href="./src/styles/style.css">
+</head>
+
+<body>
+    <div>
+        <span class="count"></span>
+        <span>/</span>
+        <span class="total"></span>
+    </div>
+    <div class="wrapper"></div>
+    <span>Space - pause, Escape - menu, &#8592; &#8595; &#8593; &#8594;</span>
+    <div class="settings show">
+        <div>
+            <label>
+                <fieldset>
+                    <legend>
+                        Snake head img URL
+                    </legend>
+                    <input type="text"
+                        value="https://png.pngitem.com/pimgs/s/134-1344027_cat-head-png-free-cat-head-transparent-images.png"
+                        id="img">
+                </fieldset>
+            </label>
+        </div>
+        <div>
+            <label>
+                <fieldset>
+                    <legend>
+                        Area Size (max 30)
+                    </legend>
+                    <input type="number" value="20" min="10" max="30" id="size">
+                </fieldset>
+            </label>
+        </div>
+        <div>
+            <label>
+                <fieldset>
+                    <legend>
+                        Total items to snake Eat
+                    </legend>
+                    <input type="number" value="20" min="1" id="total">
+                </fieldset>
+            </label>
+        </div>
+        <div>
+            <label>
+                <fieldset>
+                    <legend>
+                        Speed
+                    </legend>
+                    <input type="number" value="5" min="1" max="40" id="speed">
+                </fieldset>
+            </label>
+        </div>
+        <div>
+            <button class="start">Start</button>
+        </div>
+    </div>
+
+    <script src="./src/js/index.js"></script>
+</body>
+
+</html>

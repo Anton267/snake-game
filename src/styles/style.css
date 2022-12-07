@@ -1,0 +1,137 @@
+body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    background-color: #4158D0;
+    background-image: linear-gradient(43deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
+}
+
+.wrapper {
+    width: 800px;
+    height: 800px;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid #4158D0;
+    box-sizing: border-box;
+}
+
+.die::before {
+    content: "DIE";
+}
+
+.endLevel::before {
+    content: "Congratulations";
+}
+
+.pause::before {
+    content: "Pause";
+}
+
+.loading::before {
+    content: "Loading...";
+}
+
+.overlay::before {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.3);
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    font-size: 48px;
+    font-weight: bold;
+    animation: anim 0.5s ease both;
+    text-shadow: 5px 5px 5px black;
+}
+
+table {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    box-sizing: border-box;
+}
+
+td {
+    padding: 0;
+    box-sizing: border-box;
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+}
+
+.settings {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: anim 0.5s ease both;
+    z-index: 30;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-image: linear-gradient(to right, #8360c3, #2ebf91);
+    padding: 30px;
+}
+
+.settings div {
+    width: min-content;
+    margin-bottom: 20px;
+}
+
+.settings input {
+    border: none;
+    outline: none;
+    padding: 10px;
+    border-radius: 10px;
+    width: 200px;
+}
+
+.settings fieldset {
+    border-radius: 10px;
+}
+
+.show {
+    display: flex;
+}
+
+button.start {
+    border: none;
+    outline: none;
+    border-radius: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    width: 100px;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+@keyframes anim {
+    from {
+        transform: translateY(200%);
+    }
+
+    to {
+        transform: translateY(0%);
+    }
+}
