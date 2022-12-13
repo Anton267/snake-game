@@ -48,11 +48,12 @@ document.querySelector(".start").addEventListener("click", () => {
 });
 
 const start = () => {
+    document.querySelector(".container").innerHTML = "<div class=\"wrapper\"></div>";
     const size = +document.getElementById("size").value;
     const total = +document.getElementById("total").value;
     const speed = +document.getElementById("speed").value;
     const img = document.getElementById("img").value;
-    const level = makeLevel(size > 30 ? 30 : size, speed, total);
+    const level = makeLevel(size > 50 ? 50 : size, speed, total);
     const image = new Image();
     image.src = img;
     const wrapper = document.querySelector(".wrapper");
@@ -79,13 +80,8 @@ const init = (config, img) => {
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "rgba(0,0,0,0.1)";
-    ctx.fillRect(0, 0, width, height);
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, height, width, 1);
-    ctx.fillRect(0, 0, 1, height);
-    const tdSize = Math.floor(width / config.items[0].length);
-    paintMap(ctx, wrapper, config, tdSize, img);
+    const tdSize = width / config.items[0].length;
+    paintMap(ctx, config, tdSize, img);
     const speed = Math.round(1000 / config.speed);
     interval = setInterval(() => {
         if (dir) {
@@ -107,7 +103,7 @@ const init = (config, img) => {
                     break;
                 default:
                     ctx.clearRect(0, 0, width, height);
-                    paintMap(ctx, wrapper, config, tdSize, img);
+                    paintMap(ctx, config, tdSize, img);
                     break;
             }
         }
@@ -235,7 +231,7 @@ const getSnakePosition = (values) => {
             });
             return [min, max];
         },
-        [10000, 0]
+        [1000000, 0]
     );
     return { tailX, tailY, headX, headY };
 };
@@ -253,92 +249,67 @@ const getAction = (next) => {
     }
 };
 
-const paintMap = (ctx, wrapper, lvlItem, tdSize, img) => {
-    if (wrapper.lastElementChild.tagName !== "CANVAS") {
-        wrapper.lastElementChild.remove();
-    }
-    const table = document.createElement("table");
-    table.setAttribute("cellspacing", 0);
-    table.setAttribute("cellpadding", 0);
-    wrapper.appendChild(table);
-    // init map
+const paintMap = (ctx, lvlItem, tdSize, img) => {
     const items = lvlItem.items;
     let headEl,
         max = 0,
         tailEl,
         min = 10000;
-    const getPosition = (el) => {
-        let height, width, left, top;
-        height = Math.round(el.clientHeight);
-        width = Math.round(el.clientWidth);
-        left = Math.round(el.offsetLeft);
-        top = Math.round(el.offsetTop);
-        return { height, width, left, top };
-    };
-    items.forEach((array) => {
-        const tr = table.appendChild(document.createElement("tr"));
-        array.forEach((item) => {
-            const td = document.createElement("td");
-            td.style.width = tdSize + "px";
-            td.style.height = tdSize + "px";
-            td.style.background = "#3D9970";
-            tr.appendChild(td);
-            const position = getPosition(td);
+    const coords = { height: tdSize, width: tdSize, left: 0, top: 0 };
+    items.forEach((array, i) => {
+        array.forEach((item, j) => {
+            coords.top = coords.height * i;
+            coords.left = coords.width * j;
             // snake item
             if (item === 1) {
                 ctx.beginPath();
                 ctx.fillStyle = "#85144b";
-                ctx.fillRect(position.left, position.top, position.width, position.height);
+                ctx.fillRect(coords.left, coords.top, coords.width, coords.height);
                 ctx.strokeStyle = "white";
-                ctx.strokeRect(position.left, position.top, position.width, position.height);
+                ctx.strokeRect(coords.left, coords.top, coords.width, coords.height);
                 ctx.closePath();
             }
             // snake
             if (item > 1) {
                 ctx.beginPath();
                 ctx.fillStyle = "#252f50";
-                ctx.fillRect(position.left, position.top, position.width, position.height);
+                ctx.fillRect(coords.left, coords.top, coords.width, coords.height);
                 ctx.strokeStyle = "white";
-                ctx.strokeRect(position.left, position.top, position.width, position.height);
+                ctx.strokeRect(coords.left, coords.top, coords.width, coords.height);
                 ctx.closePath();
             }
             if (item > max) {
                 max = item;
-                headEl = td;
+                headEl = Object.assign({}, coords);
             }
             if (min > item && item > 1) {
                 min = item;
-                tailEl = td;
+                tailEl = Object.assign({}, coords);
             }
         });
     });
     ctx.beginPath();
-    const headPos = getPosition(headEl);
     if (img) {
-        img.width = headPos.width
-        img.height = headPos.height
-        ctx.drawImage(img, headPos.left, headPos.top, headPos.width, headPos.height);
+        img.width = headEl.width
+        img.height = headEl.height
+        ctx.drawImage(img, headEl.left, headEl.top, headEl.width, headEl.height);
     } else {
         ctx.fillStyle = "orange";
-        const headPos = getPosition(headEl);
         ctx.fillRect(
-            headPos.left,
-            headPos.top,
-            headPos.width,
-            headPos.height
+            headEl.left,
+            headEl.top,
+            headEl.width,
+            headEl.height
         );
     }
     ctx.fillStyle = "rgba(0,0,0,0.4)";
-    const tailPos = getPosition(tailEl);
     ctx.fillRect(
-        tailPos.left,
-        tailPos.top,
-        tailPos.width,
-        tailPos.height
+        tailEl.left,
+        tailEl.top,
+        tailEl.width,
+        tailEl.height
     );
     ctx.closePath();
-    table.style.width = "100%";
-    table.style.height = "100%";
 };
 
 const makeLevel = (size, speed, total) => {
