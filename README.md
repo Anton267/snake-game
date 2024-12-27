@@ -1,6 +1,6 @@
 Game "Snake"
 
-https://anton267.github.io/snake/
+https://anton267.github.io/snake-game/
 
 # Settings:
 ### Area Size: Size of area. Example: 20 is 20x20 = 400 squares.
